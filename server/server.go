@@ -1,0 +1,122 @@
+/*
+Package server provides a lightweight wrapper around the standard net/http library,
+specifically designed to enhance the capabilities of http.ServeMux.
+
+It aims to provide a minimal set of abstractions for building RESTful APIs, offering
+middleware chaining, simplified route registration, and standardized server configuration,
+all while maintaining 100% compatibility with the standard http.Handler interface.
+
+Usage:
+
+	srv := server.New()
+	srv.GET("/api/v1/status", statusHandler)
+	srv.Run(8080)
+*/
+package server
+
+import (
+	"fmt"
+	"net/http"
+	"slices"
+	"strings"
+	"time"
+
+	loggerAdapter "github.com/KevenMarioN/all-starts/loggers/adapter"
+)
+
+type Server struct {
+	*http.ServeMux
+	globalMW     []func(http.Handler) http.Handler
+	groupMW      []func(http.Handler) http.Handler
+	isSubGroup   bool
+	prefix       string
+	logger       loggerAdapter.ILogger
+	readTimeout  time.Duration
+	writeTimeout time.Duration
+}
+
+func NewServer() *Server {
+	return &Server{ServeMux: http.NewServeMux(), globalMW: make([]func(http.Handler) http.Handler, 0)}
+}
+
+func (s *Server) WithReadTimeout(r time.Duration) *Server {
+	if !s.isSubGroup {
+		s.readTimeout = r
+	}
+	return s
+}
+
+func (s *Server) WithWriteTimeout(r time.Duration) *Server {
+	if !s.isSubGroup {
+		s.readTimeout = r
+	}
+	return s
+}
+
+func (s *Server) Run(port uint) error {
+	var (
+		readTimeout  = 10 * time.Second
+		writeTimeout = 10 * time.Second
+	)
+
+	if s.readTimeout > 0 {
+		readTimeout = s.readTimeout
+	}
+	if s.writeTimeout > 0 {
+		writeTimeout = s.writeTimeout
+	}
+
+	srv := http.Server{
+		Addr:         fmt.Sprintf(":%d", port),
+		Handler:      s.ServeMux,
+		ReadTimeout:  readTimeout,
+		WriteTimeout: writeTimeout,
+	}
+
+	return srv.ListenAndServe()
+}
+
+func (s *Server) Use(mw ...func(http.Handler) http.Handler) {
+	if s.isSubGroup {
+		s.groupMW = append(s.groupMW, mw...)
+		return
+	}
+	s.globalMW = append(s.globalMW, mw...)
+}
+
+func (s *Server) Handler(path string, h http.Handler) {
+	router := strings.Split(path, " ")
+	if len(router) == 2 {
+		s.logger.Info("%s %s", router[0], router[1])
+	}
+	for _, mw := range slices.Backward(s.groupMW) {
+		h = mw(h)
+	}
+	s.ServeMux.Handle(path, h)
+}
+
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	var h http.Handler = s.ServeMux
+	for _, mw := range slices.Backward(s.globalMW) {
+		h = mw(h)
+	}
+	s.ServeMux.ServeHTTP(w, r)
+}
+
+func (s *Server) Group(prefix string) *Server {
+	if !strings.HasPrefix(prefix, "/") {
+		prefix = "/" + prefix
+	}
+	if !strings.HasSuffix(prefix, "/") {
+		prefix = prefix + "/"
+	}
+
+	subgroup := &Server{
+		ServeMux:   s.ServeMux,
+		logger:     s.logger,
+		groupMW:    make([]func(http.Handler) http.Handler, 0),
+		isSubGroup: true,
+		prefix:     prefix,
+	}
+	return subgroup
+}
