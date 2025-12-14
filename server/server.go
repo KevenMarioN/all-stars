@@ -86,7 +86,7 @@ func (s *Server) Use(mw ...func(http.Handler) http.Handler) {
 
 func (s *Server) Handler(path string, h http.Handler) {
 	router := strings.Split(path, " ")
-	if len(router) == 2 {
+	if len(router) == 2 && s.logger != nil {
 		s.logger.Info("%s %s", router[0], router[1])
 	}
 	for _, mw := range slices.Backward(s.groupMW) {
@@ -100,23 +100,32 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, mw := range slices.Backward(s.globalMW) {
 		h = mw(h)
 	}
-	s.ServeMux.ServeHTTP(w, r)
+	h.ServeHTTP(w, r)
 }
 
 func (s *Server) Group(prefix string) *Server {
-	if !strings.HasPrefix(prefix, "/") {
-		prefix = "/" + prefix
-	}
-	if !strings.HasSuffix(prefix, "/") {
-		prefix = prefix + "/"
+	if prefix != "" {
+		if s.prefix == "" {
+			if !strings.HasPrefix(prefix, "/") {
+				prefix = "/" + prefix
+			}
+			if !strings.HasSuffix(prefix, "/") {
+				prefix = prefix + "/"
+			}
+		} else {
+			if !strings.HasSuffix(s.prefix, "/") {
+				s.prefix = s.prefix + "/"
+			}
+		}
 	}
 
 	subgroup := &Server{
 		ServeMux:   s.ServeMux,
 		logger:     s.logger,
-		groupMW:    make([]func(http.Handler) http.Handler, 0),
+		groupMW:    slices.Clone(s.groupMW),
 		isSubGroup: true,
-		prefix:     prefix,
+		prefix:     s.prefix + prefix,
 	}
+	copy(subgroup.groupMW, s.groupMW)
 	return subgroup
 }

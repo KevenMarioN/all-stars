@@ -1,13 +1,23 @@
 package server
 
-import "net/http"
+import (
+	"net/http"
+	"strings"
+)
 
 func (s *Server) hasPrefix(path *string) {
 	if path == nil {
 		return
 	}
 	if s.prefix != "" {
+		if *path != "" && !strings.HasPrefix(*path, "/") && !strings.HasSuffix(s.prefix, "/") {
+			*path = "/" + *path
+		}
 		*path = s.prefix + *path
+	} else {
+		if !strings.HasPrefix(*path, "/") {
+			*path = "/" + *path
+		}
 	}
 }
 
