@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/KevenMarioN/all-starts/server"
+	"github.com/KevenMarioN/all-stars/server"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -21,7 +21,7 @@ func main() {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
-	output.FormatLevel = func(i interface{}) string {
+	output.FormatLevel = func(i any) string {
 		var l string
 		if ll, ok := i.(string); ok {
 			l = ll
@@ -41,13 +41,13 @@ func main() {
 			return formattedLevel
 		}
 	}
-	output.FormatMessage = func(i interface{}) string {
+	output.FormatMessage = func(i any) string {
 		return fmt.Sprintf("%s", i)
 	}
-	output.FormatFieldName = func(i interface{}) string {
+	output.FormatFieldName = func(i any) string {
 		return fmt.Sprintf("\x1b[36m%s:\x1b[0m", i)
 	}
-	output.FormatFieldValue = func(i interface{}) string {
+	output.FormatFieldValue = func(i any) string {
 		return fmt.Sprintf("\x1b[36m%s\x1b[0m", i)
 	}
 
