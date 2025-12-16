@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/KevenMarioN/all-starts/server"
+	"github.com/KevenMarioN/all-stars/server"
 )
 
 func TestMain(t *testing.T) {
