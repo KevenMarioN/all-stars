@@ -17,11 +17,13 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"reflect"
+	"runtime"
 	"slices"
 	"strings"
 	"time"
 
-	loggerAdapter "github.com/KevenMarioN/all-starts/loggers/adapter"
+	"github.com/rs/zerolog/log"
 )
 
 type Server struct {
@@ -30,7 +32,6 @@ type Server struct {
 	groupMW      []func(http.Handler) http.Handler
 	isSubGroup   bool
 	prefix       string
-	logger       loggerAdapter.ILogger
 	readTimeout  time.Duration
 	writeTimeout time.Duration
 }
@@ -73,6 +74,7 @@ func (s *Server) Run(port uint) error {
 		WriteTimeout: writeTimeout,
 	}
 
+	log.Info().Uint("listen", port).Msg("Server listener")
 	return srv.ListenAndServe()
 }
 
@@ -84,10 +86,18 @@ func (s *Server) Use(mw ...func(http.Handler) http.Handler) {
 	s.globalMW = append(s.globalMW, mw...)
 }
 
+func getFunctionName(handler any) string {
+	fullPath := runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name()
+	parts := strings.Split(fullPath, "/")
+	name := parts[len(parts)-1]
+	return strings.TrimSuffix(name, "-fm")
+}
+
 func (s *Server) Handler(path string, h http.Handler) {
 	router := strings.Split(path, " ")
-	if len(router) == 2 && s.logger != nil {
-		s.logger.Info("%s %s", router[0], router[1])
+	if len(router) == 2 {
+		funcName := getFunctionName(h)
+		log.Info().Msgf("[%s] %s %v", router[0], router[1], funcName)
 	}
 	for _, mw := range slices.Backward(s.groupMW) {
 		h = mw(h)
@@ -121,7 +131,6 @@ func (s *Server) Group(prefix string) *Server {
 
 	subgroup := &Server{
 		ServeMux:   s.ServeMux,
-		logger:     s.logger,
 		groupMW:    slices.Clone(s.groupMW),
 		isSubGroup: true,
 		prefix:     s.prefix + prefix,
