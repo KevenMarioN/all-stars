@@ -2,19 +2,20 @@
 package setup
 
 import (
-	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/rs/zerolog/log"
 )
 
 // On is the function responsible for keeping the application running.
-func On(logger *slog.Logger) {
+func On() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
-	logger.Info("Service started successfully")
-	logger.Info("To finish, press <Ctrl + C>")
+	log.Info().Msg("Service started successfully")
+	log.Info().Msg("To finish, press <Ctrl + C>")
 
 	<-c
 	os.Exit(0)
