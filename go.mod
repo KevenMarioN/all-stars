@@ -1,4 +1,4 @@
-module github.com/KevenMarioN/all-starts
+module github.com/KevenMarioN/all-stars
 
 go 1.24.10
 
