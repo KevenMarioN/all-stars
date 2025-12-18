@@ -24,9 +24,10 @@ func TestAuthMiddleware(t *testing.T) {
 	}
 	publicKey := &privateKey.PublicKey
 	scenarios := []struct {
-		name string
-		data Auth
-		auth *middlewares.AuthMiddleware[Auth]
+		name                 string
+		data                 Auth
+		auth                 *middlewares.AuthMiddleware[Auth]
+		expectedInvalidToken bool
 	}{
 		{
 			name: "Valid Token HMAC",
@@ -35,6 +36,15 @@ func TestAuthMiddleware(t *testing.T) {
 				Role: "admin",
 			},
 			auth: middlewares.NewAuthMiddleware[Auth](jwt.GetSigningMethod(jwt.SigningMethodHS384.Name), []byte("secret"), []byte("secret"), exp, nil),
+		},
+		{
+			name: "Invalid Token HMAC",
+			data: Auth{
+				ID:   30,
+				Role: "user",
+			},
+			auth:                 middlewares.NewAuthMiddleware[Auth](jwt.GetSigningMethod(jwt.SigningMethodHS384.Name), []byte("secret"), []byte("terces"), exp, nil),
+			expectedInvalidToken: true,
 		},
 		{
 			name: "Valid Token ECDSA",
@@ -54,7 +64,9 @@ func TestAuthMiddleware(t *testing.T) {
 			}
 			claims := &middlewares.AuthClaims[Auth]{}
 			if err = tt.auth.ParseToken(token, claims); err != nil {
-				t.Errorf("ParseToken() error = %v", err)
+				if !tt.expectedInvalidToken {
+					t.Errorf("ParseToken() error = %v", err)
+				}
 			}
 			if claims.Payload != tt.data {
 				t.Errorf("Payload = %v, want %v", claims.Payload, tt.data)
