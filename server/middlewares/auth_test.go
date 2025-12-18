@@ -23,6 +23,7 @@ func TestAuthMiddleware(t *testing.T) {
 		t.Fatal(err)
 	}
 	publicKey := &privateKey.PublicKey
+	// TODO: Need implementation others scenarios!
 	scenarios := []struct {
 		name                 string
 		data                 Auth
