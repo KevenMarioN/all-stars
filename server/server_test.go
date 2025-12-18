@@ -11,7 +11,7 @@ import (
 	"github.com/KevenMarioN/all-stars/server"
 )
 
-func TestMain(t *testing.T) {
+func TestServer(t *testing.T) {
 	var callBy string
 	server := server.NewServer()
 	m1 := func(next http.Handler) http.Handler {
