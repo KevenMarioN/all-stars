@@ -60,9 +60,17 @@ func main() {
 		w.WriteHeader(http.StatusContinue)
 	})
 	v1 := srv.Group("v1")
-	v1.Post("auth", func(w http.ResponseWriter, r *http.Request) {
+	v1.Post("/auth", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
+	blocks := v1.Group("blocks")
+	blocks.Get("", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotImplemented)
+	})
+	blocks.Get("/luck/{id}/", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusContinue)
+	})
+
 	if err := srv.Run(7777); err != nil {
 		log.Error().Err(err)
 	}

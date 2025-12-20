@@ -10,8 +10,24 @@ func (s *Server) hasPrefix(path *string) {
 		return
 	}
 	if s.prefix != "" {
-		if *path != "" && !strings.HasPrefix(*path, "/") && !strings.HasSuffix(s.prefix, "/") {
-			*path = "/" + *path
+		if *path == "" {
+			*path = s.prefix + *path
+			return
+		}
+		if  strings.HasSuffix(*path, ""){
+			*path = strings.TrimSuffix(*path, "/")
+		}
+		if !strings.HasSuffix(s.prefix, "/") && !strings.HasPrefix(*path, "/") {
+			*path = s.prefix + "/" + *path
+			return
+		}
+		if strings.HasSuffix(s.prefix, "/") && !strings.HasPrefix(*path, "/") {
+			*path = s.prefix + *path
+			return
+		}
+		if strings.HasSuffix(s.prefix, "/") && strings.HasPrefix(*path, "/") {
+			*path = s.prefix + strings.TrimPrefix(*path, "/")
+			return
 		}
 		*path = s.prefix + *path
 	} else {
