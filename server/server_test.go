@@ -128,20 +128,19 @@ func TestServer(t *testing.T) {
 			ExpectedPathValue: "options is true",
 		},
 		{
-			RequestMethod:  http.MethodGet,
-			RequestPath:    "/v1/books/categories/financial",
-			ExpectedStatus: http.StatusOK,
-			ExpectedCallBy: "12435",
+			RequestMethod:     http.MethodGet,
+			RequestPath:       "/v1/books/categories/financial",
+			ExpectedStatus:    http.StatusOK,
+			ExpectedCallBy:    "12435",
 			ExpectedPathValue: `[{"id": 1},{"id": 3}]`,
 		},
 		{
-			RequestMethod:  http.MethodGet,
-			RequestPath:    "/v1/books/categories/development",
-			ExpectedStatus: http.StatusOK,
-			ExpectedCallBy: "12435",
+			RequestMethod:     http.MethodGet,
+			RequestPath:       "/v1/books/categories/development",
+			ExpectedStatus:    http.StatusOK,
+			ExpectedCallBy:    "12435",
 			ExpectedPathValue: `[{"id": 9}]`,
 		},
-
 	}
 	for _, tt := range scenarios {
 		callBy = ""
