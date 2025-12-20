@@ -25,11 +25,11 @@ func TestRequestMiddleware(t *testing.T) {
 		t.Errorf("Expected status code %d (StatusOK), got %d", http.StatusOK, rr.Code)
 	}
 
-	requestID := rr.Header().Get(middlewares.REQUEST_ID_HEADER.String())
+	requestID := rr.Header().Get(middlewares.RequestIDHeader.String())
 	if requestID == "" {
 		t.Errorf("Request header there is empty")
 	}
 	if _, err := uuid.Parse(requestID); err != nil {
-		t.Errorf("Expected header key %s is valid uuid, got %s", middlewares.REQUEST_ID_HEADER.String(), requestID)
+		t.Errorf("Expected header key %s is valid uuid, got %s", middlewares.RequestIDHeader.String(), requestID)
 	}
 }
