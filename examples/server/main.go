@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/KevenMarioN/all-stars/server"
+	"github.com/KevenMarioN/all-stars/server/middlewares"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -56,6 +57,7 @@ func main() {
 	log.Debug().Msg("This logger is better!")
 	log.Error().Msg("Okay any")
 	srv := server.NewServer()
+	srv.Use(middlewares.RequestIDMiddleware)
 	srv.Get("health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusContinue)
 	})
