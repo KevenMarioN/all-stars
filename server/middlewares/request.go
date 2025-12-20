@@ -7,8 +7,10 @@ import (
 	"github.com/google/uuid"
 )
 
-const RequestIDHeader HeaderKey = "X-Request-ID"
-const RequestIDKey MwKey = "request_id"
+const (
+	RequestIDHeader HeaderKey = "X-Request-ID"
+	RequestIDKey    MwKey     = "request_id"
+)
 
 func RequestIDMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

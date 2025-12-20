@@ -11,7 +11,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-const AUTH_KEY_PAYLOAD MW_KEY = "payload"
+const AUTH_KEY_PAYLOAD MwKey = "payload"
 
 var ErrInvalidToken = errors.New("invalid token")
 
