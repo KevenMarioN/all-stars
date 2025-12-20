@@ -66,10 +66,13 @@ func (s *Server) Run(port uint) error {
 	if s.writeTimeout > 0 {
 		writeTimeout = s.writeTimeout
 	}
-
+	var h http.Handler = s.ServeMux
+	for _, mw := range slices.Backward(s.globalMW) {
+		h = mw(h)
+	}
 	srv := http.Server{
 		Addr:         fmt.Sprintf(":%d", port),
-		Handler:      s.ServeMux,
+		Handler:      h,
 		ReadTimeout:  readTimeout,
 		WriteTimeout: writeTimeout,
 	}
