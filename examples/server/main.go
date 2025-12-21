@@ -73,7 +73,7 @@ func main() {
 		w.WriteHeader(http.StatusContinue)
 	})
 
-	if err := srv.Run(7777); err != nil {
+	if err := srv.Run("7777"); err != nil {
 		log.Error().Err(err)
 	}
 }

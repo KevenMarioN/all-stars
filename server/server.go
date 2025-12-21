@@ -54,7 +54,7 @@ func (s *Server) WithWriteTimeout(r time.Duration) *Server {
 	return s
 }
 
-func (s *Server) Run(port uint) error {
+func (s *Server) Run(port string) error {
 	var (
 		readTimeout  = 10 * time.Second
 		writeTimeout = 10 * time.Second
@@ -66,18 +66,14 @@ func (s *Server) Run(port uint) error {
 	if s.writeTimeout > 0 {
 		writeTimeout = s.writeTimeout
 	}
-	var h http.Handler = s.ServeMux
-	for _, mw := range slices.Backward(s.globalMW) {
-		h = mw(h)
-	}
 	srv := http.Server{
-		Addr:         fmt.Sprintf(":%d", port),
-		Handler:      h,
+		Addr:         fmt.Sprintf(":%s", port),
+		Handler:      http.HandlerFunc(s.ServeHTTP),
 		ReadTimeout:  readTimeout,
 		WriteTimeout: writeTimeout,
 	}
 
-	log.Info().Uint("listen", port).Msg("Server listener")
+	log.Info().Str("listen", port).Msg("Server listener")
 	return srv.ListenAndServe()
 }
 
