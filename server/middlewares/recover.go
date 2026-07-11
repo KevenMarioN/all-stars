@@ -21,17 +21,20 @@ func RecoverMiddleware(next http.Handler) http.Handler {
 }
 
 func RecoverMiddlewareJSON(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			defer func() {
-				if err := recover(); err != nil {
-					log.Printf("PANIC RECOVERED: %v\n%s", err, debug.Stack())
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				log.Printf("PANIC RECOVERED: %v\n%s", err, debug.Stack())
 
-					w.Header().Set("Content-Type", "application/json")
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte(`{"error": "Internal Server Error"}`))
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+
+				if _, err := w.Write([]byte(`{"error": "Internal Server Error"}`)); err != nil {
+					log.Error().Err(err).Msg("middlewares: failed write response in recover")
 				}
-			}()
+			}
+		}()
 
-			next.ServeHTTP(w, r)
-		})
+		next.ServeHTTP(w, r)
+	})
 }

@@ -44,6 +44,7 @@ func (s *Server) WithReadTimeout(r time.Duration) *Server {
 	if !s.isSubGroup {
 		s.readTimeout = r
 	}
+
 	return s
 }
 
@@ -51,6 +52,7 @@ func (s *Server) WithWriteTimeout(r time.Duration) *Server {
 	if !s.isSubGroup {
 		s.readTimeout = r
 	}
+
 	return s
 }
 
@@ -63,9 +65,11 @@ func (s *Server) Run(port string) error {
 	if s.readTimeout > 0 {
 		readTimeout = s.readTimeout
 	}
+
 	if s.writeTimeout > 0 {
 		writeTimeout = s.writeTimeout
 	}
+
 	srv := http.Server{
 		Addr:         fmt.Sprintf(":%s", port),
 		Handler:      http.HandlerFunc(s.ServeHTTP),
@@ -74,6 +78,7 @@ func (s *Server) Run(port string) error {
 	}
 
 	log.Info().Str("listen", port).Msg("Server listener")
+
 	return srv.ListenAndServe()
 }
 
@@ -82,6 +87,7 @@ func (s *Server) Use(mw ...func(http.Handler) http.Handler) {
 		s.groupMW = append(s.groupMW, mw...)
 		return
 	}
+
 	s.globalMW = append(s.globalMW, mw...)
 }
 
@@ -89,6 +95,7 @@ func getFunctionName(handler any) string {
 	fullPath := runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name()
 	parts := strings.Split(fullPath, "/")
 	name := parts[len(parts)-1]
+
 	return strings.TrimSuffix(name, "-fm")
 }
 
@@ -98,10 +105,12 @@ func (s *Server) Handler(path string, h http.Handler) {
 		funcName := getFunctionName(h)
 		log.Info().Msgf("[%s] %s %v", router[0], router[1], funcName)
 	}
+
 	for _, mw := range slices.Backward(s.groupMW) {
 		h = mw(h)
 	}
-	s.ServeMux.Handle(path, h)
+
+	s.Handle(path, h)
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -109,6 +118,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, mw := range slices.Backward(s.globalMW) {
 		h = mw(h)
 	}
+
 	h.ServeHTTP(w, r)
 }
 
@@ -118,13 +128,12 @@ func (s *Server) Group(prefix string) *Server {
 			if !strings.HasPrefix(prefix, "/") {
 				prefix = "/" + prefix
 			}
+
 			if !strings.HasSuffix(prefix, "/") {
-				prefix = prefix + "/"
+				prefix += "/"
 			}
-		} else {
-			if !strings.HasSuffix(s.prefix, "/") {
-				s.prefix = s.prefix + "/"
-			}
+		} else if !strings.HasSuffix(s.prefix, "/") {
+			s.prefix += "/"
 		}
 	}
 
@@ -135,5 +144,6 @@ func (s *Server) Group(prefix string) *Server {
 		prefix:     s.prefix + prefix,
 	}
 	copy(subgroup.groupMW, s.groupMW)
+
 	return subgroup
 }

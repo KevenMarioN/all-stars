@@ -28,7 +28,13 @@ type AuthMiddleware[T any] struct {
 	method    jwt.SigningMethod
 }
 
-func NewAuthMiddleware[T any](method jwt.SigningMethod, signKey any, verifyKey any, expiresAt func() time.Time, notBefore func() time.Time) *AuthMiddleware[T] {
+func NewAuthMiddleware[T any](
+	method jwt.SigningMethod,
+	signKey any,
+	verifyKey any,
+	expiresAt func() time.Time,
+	notBefore func() time.Time,
+) *AuthMiddleware[T] {
 	var (
 		auth = &AuthMiddleware[T]{
 			signKey:   signKey,
@@ -62,7 +68,9 @@ func (m *AuthMiddleware[T]) CreateToken(data T) (string, error) {
 	if m.NotBefore != nil {
 		claims.NotBefore = jwt.NewNumericDate(*m.NotBefore)
 	}
+
 	token := jwt.NewWithClaims(m.method, claims)
+
 	return token.SignedString(m.signKey)
 }
 
@@ -71,6 +79,7 @@ func (m *AuthMiddleware[T]) ParseToken(tokenString string, claims jwt.Claims) er
 		if token.Method.Alg() != m.method.Alg() {
 			return nil, fmt.Errorf("unsupported signing method: %v", token.Header["alg"])
 		}
+
 		return m.verifyKey, nil
 	})
 
@@ -90,6 +99,7 @@ func (m *AuthMiddleware[T]) Handler(h http.Handler) http.Handler {
 		}
 
 		tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+
 		var claims AuthClaims[T]
 		if err := m.ParseToken(tokenString, &claims); err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)

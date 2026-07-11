@@ -13,34 +13,40 @@ import (
 
 func TestServer(t *testing.T) {
 	var callBy string
+
 	server := server.NewServer()
 	m1 := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			callBy += "1"
+
 			next.ServeHTTP(w, r)
 		})
 	}
 	m2 := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			callBy += "2"
+
 			next.ServeHTTP(w, r)
 		})
 	}
 	m3 := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			callBy += "3"
+
 			next.ServeHTTP(w, r)
 		})
 	}
 	m4 := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			callBy += "4"
+
 			next.ServeHTTP(w, r)
 		})
 	}
 	m5 := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			callBy += "5"
+
 			next.ServeHTTP(w, r)
 		})
 	}
@@ -65,12 +71,15 @@ func TestServer(t *testing.T) {
 	})
 	categoriesBooks.Delete("/{id}", func(w http.ResponseWriter, r *http.Request) {
 		idPath := r.PathValue("id")
+
 		id, err := strconv.Atoi(idPath)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
+
 			return
 		}
+
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, `{"message": "delete with success %d"}`, id)
 	})
@@ -155,12 +164,15 @@ func TestServer(t *testing.T) {
 	}
 	for _, tt := range scenarios {
 		callBy = ""
+
 		rq, err := http.NewRequest(tt.RequestMethod, tt.RequestPath, nil)
 		if err != nil {
 			t.Errorf("NewRequest: %s", err.Error())
 		}
+
 		rr := httptest.NewRecorder()
 		server.ServeHTTP(rr, rq)
+
 		rs := rr.Result()
 		if rs.StatusCode != tt.ExpectedStatus {
 			t.Errorf("[%s] %s: status: expected %d; got %d\n",
@@ -168,14 +180,17 @@ func TestServer(t *testing.T) {
 				tt.RequestPath,
 				tt.ExpectedStatus, rs.StatusCode)
 		}
+
 		if callBy != tt.ExpectedCallBy {
 			t.Errorf("[%s] %s: mw used: expected %q; got %q\n",
 				tt.RequestMethod,
 				tt.RequestPath,
 				tt.ExpectedCallBy, callBy)
 		}
+
 		if tt.ExpectedPathValue != "" {
 			rawAll, _ := io.ReadAll(rs.Body)
+
 			all := string(rawAll)
 			if all != tt.ExpectedPathValue {
 				t.Errorf("[%s] %s: expected path: expected %q; got %q\n",
