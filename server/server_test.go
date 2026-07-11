@@ -87,6 +87,11 @@ func TestServer(t *testing.T) {
 		fmt.Fprintf(w, `[{"id": 9}]`)
 	})
 
+	categoriesBooks.Query("/details", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(w, `[{"id": 10}]`)
+	})
+
 	scenarios := []struct {
 		RequestMethod     string
 		RequestPath       string
@@ -140,6 +145,12 @@ func TestServer(t *testing.T) {
 			ExpectedStatus:    http.StatusOK,
 			ExpectedCallBy:    "12435",
 			ExpectedPathValue: `[{"id": 9}]`,
+		},
+		{
+			RequestMethod:  "QUERY",
+			RequestPath:    "/v1/books/categories/details",
+			ExpectedStatus: http.StatusNotFound,
+			ExpectedCallBy: "12435",
 		},
 	}
 	for _, tt := range scenarios {
