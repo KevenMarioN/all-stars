@@ -16,11 +16,14 @@ import (
 
 func main() {
 	debug := flag.Bool("debug", false, "sets log level to debug")
+
 	flag.Parse()
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+
 	if *debug {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
+
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
 	output.FormatLevel = func(i any) string {
 		var l string
@@ -54,8 +57,10 @@ func main() {
 
 	multi := zerolog.MultiLevelWriter(output, os.Stdout)
 	log.Logger = log.Output(multi)
+
 	log.Debug().Msg("This logger is better!")
 	log.Error().Msg("Okay any")
+
 	srv := server.NewServer()
 	srv.Use(middlewares.RequestIDMiddleware)
 	srv.Get("health", func(w http.ResponseWriter, r *http.Request) {
